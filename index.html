@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD SQL </title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <h2>Agregar Usuario</h2>
+    <form id="userForm">
+        <input type="text" id="documento" placeholder="Documento" required>
+        <input type="email" id="email" placeholder="Correo" required>
+        <button type="submit">Guardar</button>
+    </form>
+
+    <h2>Lista de Usuarios</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>RECLUTADOR</th>
+                <th>FUENTE DE RECLUTAMIENTO</th>
+                <th>PUESTO</th>
+                <th>NOMBRES</th>
+                <th>APELLIDOS</th>
+                <th>DNI</th>
+                <th>CELULAR</th>
+                <th>DISTRITO</th>
+                <th>ESTADO DEL PROCESO</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="usuariosTabla">
+
+        </tbody>
+    </table>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/usuarios';
+
+        // FUNCIÓN PARA LEER (READ)
+        async function obtenerUsuarios() {
+            const res = await fetch(API_URL);
+            const usuarios = await res.json();
+            const tabla = document.getElementById('usuariosTabla');
+            tabla.innerHTML = ''; // Limpiar tabla
+
+            usuarios.forEach(user => {
+                tabla.innerHTML += `
+                    <tr>
+                       <td>${user.id}</td><td>${user.DNI}</td>
+                        <td>${user.email}</td><td>${user["REFERIDO DE"]}</td>
+                        <td>${user["RECLUTADOR"]}</td><td>${user["FECHA DE REGISTRO"]}</td>                       
+
+                            <button class="btn-delete" onclick="eliminarUsuario(${user.id})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // FUNCIÓN PARA CREAR (CREATE)
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const documento = document.getElementById('documento').value;
+            const email = document.getElementById('email').value;
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ documento, email })
+            });
+
+            document.getElementById('userForm').reset();
+            obtenerUsuarios(); // Recargar tabla
+        });
+
+        // FUNCIÓN PARA ELIMINAR (DELETE)
+        async function eliminarUsuario(id) {
+            if (confirm('¿Seguro que deseas eliminar este registro?')) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                obtenerUsuarios(); // Recargar tabla
+            }
+        }
+
+        // Cargar datos al abrir la página
+        obtenerUsuarios();
+    </script>
+</body>
+
+</html>
