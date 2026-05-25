@@ -12,8 +12,8 @@
 
     <h2>Agregar Usuario</h2>
     <form id="userForm">
-        <input type="text" id="documento" placeholder="Documento" required>
-        <input type="email" id="email" placeholder="Correo" required>
+        <input type="text" id="RECLUTADOR" placeholder="RECLUTADOR" required>
+        <input type="text" id="DNI" placeholder="DNI" required>
         <button type="submit">Guardar</button>
     </form>
 
@@ -43,47 +43,90 @@
         const API_URL = 'http://127.0.0.1:8000/api/usuarios';
 
         // FUNCIÓN PARA LEER (READ)
-        async function obtenerUsuarios() {
-            const res = await fetch(API_URL);
-            const usuarios = await res.json();
-            const tabla = document.getElementById('usuariosTabla');
-            tabla.innerHTML = ''; // Limpiar tabla
+        async function obtenerUsuarios() { 
+            try {
+                const res = await fetch(API_URL);
+                const usuarios = await res.json();
+                const tabla = document.getElementById('usuariosTabla');
+                tabla.innerHTML = ''; // Limpiar tabla
 
-            usuarios.forEach(user => {
-                tabla.innerHTML += `
-                    <tr>
-                       <td>${user.id}</td><td>${user.DNI}</td>
-                        <td>${user.email}</td><td>${user["REFERIDO DE"]}</td>
-                        <td>${user["RECLUTADOR"]}</td><td>${user["FECHA DE REGISTRO"]}</td>                       
-
-                            <button class="btn-delete" onclick="eliminarUsuario(${user.id})">Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-            });
+                usuarios.forEach(user => {
+                    tabla.innerHTML += `
+                        <tr>
+                           <td>${user.id}</td>
+                           <td>${user.RECLUTADOR}</td>
+                           <td>${user["FUENTE DE RECLUTAMIENTO"]}</td>
+                           <td>${user.PUESTO}</td>
+                           <td>${user.NOMBRES}</td>
+                           <td>${user.APELLIDOS}</td>
+                           <td>${user.DNI}</td>
+                           <td>${user.CELULAR}</td>
+                           <td>${user.DISTRITO}</td>
+                           <td>${user["ESTADO DEL PROCESO"]}</td>
+                           <td>
+                               <button class="btn-delete" onclick="eliminarUsuario(${user.id})">Eliminar</button>
+                               <button class="btn-edit" onclick="editarUsuario(${user.id})">Editar</button>
+                           </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error al obtener usuarios:', error);
+                alert('Error al conectar con la base de datos');
+            }
         }
 
         // FUNCIÓN PARA CREAR (CREATE)
         document.getElementById('userForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const documento = document.getElementById('documento').value;
-            const email = document.getElementById('email').value;
+            const RECLUTADOR = document.getElementById('RECLUTADOR').value;
+            const DNI = document.getElementById('DNI').value;
 
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ documento, email })
-            });
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ RECLUTADOR, DNI })
+                });
 
-            document.getElementById('userForm').reset();
-            obtenerUsuarios(); // Recargar tabla
+                document.getElementById('userForm').reset();
+                obtenerUsuarios(); // Recargar tabla
+            } catch (error) {
+                console.error('Error al crear usuario:', error);
+                alert('Error al guardar el usuario');
+            }
         });
 
         // FUNCIÓN PARA ELIMINAR (DELETE)
         async function eliminarUsuario(id) {
             if (confirm('¿Seguro que deseas eliminar este registro?')) {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                obtenerUsuarios(); // Recargar tabla
+                try {
+                    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    obtenerUsuarios(); // Recargar tabla
+                } catch (error) {
+                    console.error('Error al eliminar usuario:', error);
+                    alert('Error al eliminar el usuario');
+                }
+            }
+        }
+
+        //MODIFICAR (UPDATE)
+        async function editarUsuario(id) {
+            const nuevoRECLUTADOR = prompt('Ingrese el nuevo RECLUTADOR:');
+            const nuevoDNI = prompt('Ingrese el nuevo DNI:');
+
+            if (nuevoRECLUTADOR && nuevoDNI) {
+                try {
+                    await fetch(`${API_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ RECLUTADOR: nuevoRECLUTADOR, DNI: nuevoDNI })
+                    });
+                    obtenerUsuarios(); // Recargar tabla
+                } catch (error) {
+                    console.error('Error al editar usuario:', error);
+                    alert('Error al actualizar el usuario');
+                }
             }
         }
 
